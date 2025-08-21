@@ -1,11 +1,10 @@
-import React from "react";
-import { Text, View } from "react-native";
+import { Redirect } from "expo-router";
 
 const index = () => {
   return (
-    <View>
-      <Text>index</Text>
-    </View>
+    <>
+      <Redirect href="/get_started" />
+    </>
   );
 };
 

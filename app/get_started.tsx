@@ -24,7 +24,7 @@ const get_started = () => {
           </View>
           <View className="flex-row w-full justify-center items-center">
             <Text className="text-md font-mulish_regular text-white text-center">Sudah memiliki akun,</Text>
-            <TouchableOpacity className="text-md font-mulish_regular text-white text-center">
+            <TouchableOpacity onPress={() => router.push("/login")} className="text-md font-mulish_regular text-white text-center">
               <Text className="text-md font-mulish_regular text-[#FF9900] text-center"> Login?</Text>
             </TouchableOpacity>
           </View>

@@ -58,8 +58,8 @@ const create_account = () => {
             {/* Login Link */}
             <View className="flex-row justify-center mb-8">
               <Text className="text-gray-600 font-mulish_regular">Sudah punya akun, </Text>
-              <TouchableOpacity>
-                <Text className="text-orange-500 font-mulish_medium">Daftar?</Text>
+              <TouchableOpacity onPress={() => router.push("/login")}>
+                <Text className="text-orange-500 font-mulish_medium">Login?</Text>
               </TouchableOpacity>
             </View>
 

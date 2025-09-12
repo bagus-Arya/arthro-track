@@ -42,6 +42,7 @@ export default function RootLayout() {
         <Stack.Screen name="login" />
         <Stack.Screen name="(tabs)" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="+not-found" />
+        <Stack.Screen name="home/info" />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

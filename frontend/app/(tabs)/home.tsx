@@ -1,5 +1,6 @@
-import { Image, StatusBar, Text, View } from "react-native";
+import { Image, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 
 const Home = () => {
   return (
@@ -43,24 +44,24 @@ const Home = () => {
           </View>
 
           <View className="flex flex-row justify-evenly items-center w-full mt-6 gap-4">
-            <View className="flex flex-col flex-1 justify-center items-center border border-gray-300 rounded-lg p-2">
+            <TouchableOpacity onPress={() => router.push("/home/info")} className="flex flex-col flex-1 justify-center items-center border border-gray-300 rounded-lg p-2">
               <Image source={require("../../assets/images/qa_icon.png")} className="w-16 h-16 mb-2" />
               <Text className="text-lg text-black mb-1 font-mulish_bold">info QA</Text>
-            </View>
-            <View className="flex flex-col flex-1 justify-center items-center border border-gray-300 rounded-lg p-2">
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/home/panduan")} className="flex flex-col flex-1 justify-center items-center border border-gray-300 rounded-lg p-2">
               <Image source={require("../../assets/images/guide_icon.png")} className="w-16 h-16 mb-2" />
               <Text className="text-lg text-black mb-1 font-mulish_bold">Panduan</Text>
-            </View>
+            </TouchableOpacity>
           </View>
           <View className="flex flex-row justify-evenly items-center w-full mt-6 gap-4">
-            <View className="flex flex-col flex-1 justify-center items-center border border-gray-300 rounded-lg p-2">
+            <TouchableOpacity onPress={() => router.push("/home/hasil")} className="flex flex-col flex-1 justify-center items-center border border-gray-300 rounded-lg p-2">
               <Image source={require("../../assets/images/result_icon.png")} className="w-16 h-16 mb-2" />
               <Text className="text-lg text-black mb-1 font-mulish_bold">Hasil</Text>
-            </View>
-            <View className="flex flex-col flex-1 justify-center items-center border border-gray-300 rounded-lg p-2">
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/home/riwayat_hasil")} className="flex flex-col flex-1 justify-center items-center border border-gray-300 rounded-lg p-2">
               <Image source={require("../../assets/images/result_history.png")} className="w-16 h-16 mb-2" />
               <Text className="text-lg text-black mb-1 font-mulish_bold">Riwayat Hasil</Text>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
       </SafeAreaView>

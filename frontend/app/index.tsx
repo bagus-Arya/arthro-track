@@ -3,7 +3,7 @@ import { Redirect } from "expo-router";
 const index = () => {
   return (
     <>
-      <Redirect href="/get_started" />
+      <Redirect href="/(tabs)/profile" />
     </>
   );
 };

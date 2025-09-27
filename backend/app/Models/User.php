@@ -21,6 +21,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'age',
+        'weight',
+        'height',
+        'gender',
     ];
 
     /**
@@ -43,6 +47,13 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'weight' => 'decimal:2',
+            'height' => 'decimal:2',
         ];
+    }
+    
+    public function sensorData()
+    {
+        return $this->hasMany(SensorData::class);
     }
 }

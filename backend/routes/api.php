@@ -70,5 +70,10 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json(['success' => true, 'message' => 'Logged out']);
     });
 
+    // API endpoint sensor
     Route::apiResource('sensor-data', SensorDataController::class)->only(['index', 'store']);
+    
+    Route::get('/sensor-data/{patientId}/risk', [SensorController::class, 'getRiskAssessment'])->name('sensor.risk');  
+    Route::post('/oa-risk', [SensorController::class, 'calculateRisk'])->name('oa.risk'); 
+
 });

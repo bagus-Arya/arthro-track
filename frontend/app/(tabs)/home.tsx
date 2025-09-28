@@ -46,7 +46,7 @@ const Home = () => {
           <View className="flex flex-row justify-evenly items-center w-full mt-6 gap-4">
             <TouchableOpacity onPress={() => router.push("/home/info")} className="flex flex-col flex-1 justify-center items-center border border-gray-300 rounded-lg p-2">
               <Image source={require("../../assets/images/qa_icon.png")} className="w-16 h-16 mb-2" />
-              <Text className="text-lg text-black mb-1 font-mulish_bold">info QA</Text>
+              <Text className="text-lg text-black mb-1 font-mulish_bold">Info OA</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push("/home/panduan")} className="flex flex-col flex-1 justify-center items-center border border-gray-300 rounded-lg p-2">
               <Image source={require("../../assets/images/guide_icon.png")} className="w-16 h-16 mb-2" />

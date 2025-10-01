@@ -129,7 +129,7 @@ const Info = () => {
 
         {videoCards.length > 0 && (
           <View className="mb-6">
-            <Text className="text-lg font-bold text-black mb-4">Video Resiko OA</Text>
+            <Text className="text-lg font-bold text-black mb-4">Video Latihan OA</Text>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="p-2">
               {videoCards.map((video: CardData) => (

@@ -14,15 +14,30 @@ return new class extends Migration
         Schema::create('sensor_data', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');  
+
             $table->decimal('left_weight', 8, 2)->nullable();  
             $table->decimal('right_weight', 8, 2)->nullable();  
-            $table->json('left_mpu')->nullable(); 
-            $table->json('right_mpu')->nullable();  
-            $table->decimal('piezo1', 6, 2)->nullable();  
-            $table->decimal('piezo2', 6, 2)->nullable();
-            $table->decimal('piezo3', 6, 2)->nullable();
-            $table->decimal('piezo4', 6, 2)->nullable();
-            $table->decimal('piezo5', 6, 2)->nullable();
+
+    
+            $table->decimal('left_mpu', 8, 4)->nullable();  
+            $table->decimal('right_mpu', 8, 4)->nullable();  
+
+            $table->decimal('piezo1', 8, 2)->nullable();  
+            $table->decimal('piezo2', 8, 2)->nullable();
+            $table->decimal('piezo3', 8, 2)->nullable();
+            $table->decimal('piezo4', 8, 2)->nullable();
+            $table->decimal('piezo5', 8, 2)->nullable();
+
+            $table->string('param1')->nullable();
+            $table->string('param2')->nullable();
+            $table->string('param3')->nullable();
+            $table->string('param4')->nullable();
+            $table->string('param5')->nullable();
+            $table->string('param6')->nullable();
+
+            $table->decimal('oa_score', 5, 2)->nullable();
+            $table->string('oa_risk_category')->nullable();
+
             $table->timestamps();  
         });
     }

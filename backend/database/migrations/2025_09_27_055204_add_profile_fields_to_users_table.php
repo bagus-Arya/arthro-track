@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->integer('age')->nullable()->after('name');
             $table->decimal('weight', 5, 2)->nullable()->after('age');  
-            $table->decimal('height', 4, 2)->nullable()->after('weight');  
+            $table->decimal('height', 5, 2)->nullable()->after('weight');  
             $table->enum('gender', ['male', 'female', 'other'])->nullable()->after('height');
         });
     }

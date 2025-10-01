@@ -1,0 +1,87 @@
+### Register User
+POST http://127.0.0.1:8000/api/register
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "password": "password123",
+  "password_confirmation": "password123",
+  "age": 30,
+  "weight": 70.5,
+  "height": 175.3,
+  "gender": "male"
+}
+
+###
+
+### Login User
+POST http://127.0.0.1:8000/api/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "password123"
+}
+
+###
+
+### Get User Profile (Authenticated)
+GET http://127.0.0.1:8000/api/user/profile
+Authorization: Bearer 6|8cVPaIpqsWkDmFPryOhOS1dRkBlrONpCLDKLShjTb160dcf5
+Accept: application/json
+
+###
+
+### Update User Profile (Authenticated)
+PUT http://your-api-domain.com/user/profile
+Authorization: Bearer 1|IAeAA9cExFLvtttQcvRpUy0hLBEod7By57yEOQwR309ce4d9
+Content-Type: application/json
+
+{
+  "name": "John Updated",
+  "age": 31
+}
+
+###
+
+### Logout User (Authenticated)
+POST http://your-api-domain.com/logout
+Authorization: Bearer 1|IAeAA9cExFLvtttQcvRpUy0hLBEod7By57yEOQwR309ce4d9
+
+###
+
+### Get Sensor Data List (Authenticated)
+GET http://your-api-domain.com/sensor-data
+Authorization: Bearer 1|IAeAA9cExFLvtttQcvRpUy0hLBEod7By57yEOQwR309ce4d9
+
+###
+
+### Store Sensor Data (Authenticated)
+POST http://your-api-domain.com/sensor-data
+Authorization: Bearer 1|IAeAA9cExFLvtttQcvRpUy0hLBEod7By57yEOQwR309ce4d9
+Content-Type: application/json
+
+{
+  "patient_id": 1,
+  "sensor_value": 123.45,
+  "timestamp": "2024-06-01T12:00:00Z"
+}
+
+###
+
+### Get Risk Assessment for Patient (Authenticated)
+GET http://your-api-domain.com/sensor-data/1/risk
+Authorization: Bearer 1|IAeAA9cExFLvtttQcvRpUy0hLBEod7By57yEOQwR309ce4d9
+
+###
+
+### Calculate OA Risk (Authenticated)
+POST http://your-api-domain.com/oa-risk
+Authorization: Bearer 1|IAeAA9cExFLvtttQcvRpUy0hLBEod7By57yEOQwR309ce4d9
+Content-Type: application/json
+
+{
+  "patient_id": 1,
+  "some_other_param": "value"
+}

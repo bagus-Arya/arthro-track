@@ -4,73 +4,138 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\SensorData;
 
 class SensorDataController extends Controller
 {
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'left_weight' => 'required|numeric|min:0|max:200',  // kg limit
-            'right_weight' => 'required|numeric|min:0|max:200',
-            'left_mpu' => 'required|json',  // Validate as JSON string
-            'right_mpu' => 'required|json',
-            'piezo1' => 'required|numeric|min:0|max:1000',  // Arbitrary units
-            'piezo2' => 'required|numeric|min:0|max:1000',
-            'piezo3' => 'required|numeric|min:0|max:1000',
-            'piezo4' => 'required|numeric|min:0|max:1000',
-            'piezo5' => 'required|numeric|min:0|max:1000',
+            'user_id' => 'required|integer',
+            'left_weight' => 'required|numeric',
+            'right_weight' => 'required|numeric',
+            'left_mpu' => 'required|numeric',
+            'right_mpu' => 'required|numeric',
+            'piezo1' => 'required|integer',
+            'piezo2' => 'required|integer',
+            'piezo3' => 'required|integer',
+            'piezo4' => 'required|integer',
+            'piezo5' => 'required|integer',
         ]);
-        
-        $leftMpu = json_decode($validated['left_mpu'], true);
-        $rightMpu = json_decode($validated['right_mpu'], true);
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($leftMpu) || !is_array($rightMpu)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid MPU data format. Use JSON object (e.g., {"accel_x": 0.1}).'
-            ], 422);
+
+        // Calculate OA parameters 
+        $param1 = $this->calculateFlexionAngleCategory($validated);
+        $param2 = $this->calculateLeftRightAsymmetryCategory($validated);
+        $param3 = $this->calculateStepSpeedCategory($validated);
+        $param4 = $this->calculateParameter4Category($validated);
+        $param5 = $this->calculateParameter5Category($validated);
+        $param6 = $this->calculateParameter6Category($validated);
+
+        // Map OA categories to points
+        $pointsMap = [
+            'Non-OA' => 0,
+            'OA Rendah' => 5.56,
+            'OA Sedang' => 11.11,
+            'OA Tinggi' => 16.67,
+        ];
+
+        // Sum points from all 6 parameters
+        $params = [$param1, $param2, $param3, $param4, $param5, $param6];
+        $totalPoints = 0;
+        foreach ($params as $p) {
+            $totalPoints += $pointsMap[$p] ?? 0;
         }
-        
-        $sensorData = SensorData::create([
-            'user_id' => Auth::id(),
-            'left_weight' => $validated['left_weight'],
-            'right_weight' => $validated['right_weight'],
-            'left_mpu' => $leftMpu,  // Stored as JSON in DB
-            'right_mpu' => $rightMpu,
-            'piezo1' => $validated['piezo1'],
-            'piezo2' => $validated['piezo2'],
-            'piezo3' => $validated['piezo3'],
-            'piezo4' => $validated['piezo4'],
-            'piezo5' => $validated['piezo5'],
-        ]);
-        
+
+        // Classify final OA risk category based on total points
+        if ($totalPoints == 0) {
+            $riskCategory = 'Non OA';
+        } elseif ($totalPoints <= 33) {
+            $riskCategory = 'Risiko Rendah';
+        } elseif ($totalPoints <= 66) {
+            $riskCategory = 'Risiko Sedang';
+        } else {
+            $riskCategory = 'Risiko Tinggi';
+        }
+
+        // Store sensor data + calculated OA parameters and risk info
+        $sensorData = SensorData::create(array_merge($validated, [
+            'param1' => $param1,
+            'param2' => $param2,
+            'param3' => $param3,
+            'param4' => $param4,
+            'param5' => $param5,
+            'param6' => $param6,
+            'oa_score' => $totalPoints,
+            'oa_risk_category' => $riskCategory,
+        ]));
+
         return response()->json([
             'success' => true,
-            'message' => 'Sensor data stored successfully',
-            'data' => $sensorData->only(['id', 'left_weight', 'right_weight', 'left_mpu', 'right_mpu', 'piezo1', 'piezo2', 'piezo3', 'piezo4', 'piezo5', 'created_at'])
+            'oa_score' => $totalPoints,
+            'oa_risk_category' => $riskCategory,
+            'data' => $sensorData,
         ], 201);
     }
-    
-    public function index()
+
+    // Example calculation functions for OA parameters
+    private function calculateFlexionAngleCategory($data)
     {
-        $sensorData = Auth::user()->sensorData()->latest()->limit(10)->get();
-        
-        return response()->json([
-            'success' => true,
-            'data' => $sensorData->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'left_weight' => $item->left_weight,
-                    'right_weight' => $item->right_weight,
-                    'left_mpu' => $item->left_mpu,
-                    'right_mpu' => $item->right_mpu,
-                    'piezo1' => $item->piezo1,
-                    'piezo2' => $item->piezo2,
-                    'piezo3' => $item->piezo3,
-                    'piezo4' => $item->piezo4,
-                    'piezo5' => $item->piezo5,
-                    'created_at' => $item->created_at,
-                ];
-            })
-        ]);
+        // Example: use left_mpu as proxy for flexion angle
+        $val = $data['left_mpu'];
+        if ($val < 0.5) return 'Non-OA';
+        if ($val < 1.0) return 'OA Rendah';
+        if ($val < 1.5) return 'OA Sedang';
+        return 'OA Tinggi';
     }
-}    
+
+    private function calculateLeftRightAsymmetryCategory($data)
+    {
+        // Example: calculate asymmetry ratio of weights
+        $ratio = $data['left_weight'] / max($data['right_weight'], 0.01);
+        $diff = abs(1 - $ratio);
+        if ($diff < 0.1) return 'Non-OA';
+        if ($diff < 0.2) return 'OA Rendah';
+        if ($diff < 0.3) return 'OA Sedang';
+        return 'OA Tinggi';
+    }
+
+    private function calculateStepSpeedCategory($data)
+    {
+        // Placeholder: use average of MPU magnitudes as proxy for step speed
+        $avgMpu = ($data['left_mpu'] + $data['right_mpu']) / 2;
+        if ($avgMpu > 1.5) return 'Non-OA';
+        if ($avgMpu > 1.0) return 'OA Rendah';
+        if ($avgMpu > 0.5) return 'OA Sedang';
+        return 'OA Tinggi';
+    }
+
+    private function calculateParameter4Category($data)
+    {
+        // Placeholder logic using piezo1 sensor
+        $val = $data['piezo1'];
+        if ($val > 3000) return 'Non-OA';
+        if ($val > 2000) return 'OA Rendah';
+        if ($val > 1000) return 'OA Sedang';
+        return 'OA Tinggi';
+    }
+
+    private function calculateParameter5Category($data)
+    {
+        // Placeholder logic using piezo2 sensor
+        $val = $data['piezo2'];
+        if ($val > 3000) return 'Non-OA';
+        if ($val > 2000) return 'OA Rendah';
+        if ($val > 1000) return 'OA Sedang';
+        return 'OA Tinggi';
+    }
+
+    private function calculateParameter6Category($data)
+    {
+        // Placeholder logic using piezo3 sensor
+        $val = $data['piezo3'];
+        if ($val > 3000) return 'Non-OA';
+        if ($val > 2000) return 'OA Rendah';
+        if ($val > 1000) return 'OA Sedang';
+        return 'OA Tinggi';
+    }
+}

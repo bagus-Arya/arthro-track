@@ -1,5 +1,5 @@
 ### Register User
-POST http://127.0.0.1:8000/api/register
+POST https://thegt.my.id/api/register
 Content-Type: application/json
 
 {
@@ -16,7 +16,7 @@ Content-Type: application/json
 ###
 
 ### Login User
-POST http://127.0.0.1:8000/api/login
+POST https://thegt.my.id/api/login
 Content-Type: application/json
 
 {
@@ -51,27 +51,32 @@ Authorization: Bearer 1|IAeAA9cExFLvtttQcvRpUy0hLBEod7By57yEOQwR309ce4d9
 
 ###
 
-### Get Sensor Data List (Authenticated)
-GET http://your-api-domain.com/sensor-data
-Authorization: Bearer 1|IAeAA9cExFLvtttQcvRpUy0hLBEod7By57yEOQwR309ce4d9
+### Get Sensor Data List 
+GET https://thegt.my.id/api/sensor-data
 
 ###
 
-### Store Sensor Data (Authenticated)
-POST http://your-api-domain.com/sensor-data
-Authorization: Bearer 1|IAeAA9cExFLvtttQcvRpUy0hLBEod7By57yEOQwR309ce4d9
+### Store Sensor Data 
+POST https://thegt.my.id/api/sensor-data
 Content-Type: application/json
 
 {
-  "patient_id": 1,
-  "sensor_value": 123.45,
-  "timestamp": "2024-06-01T12:00:00Z"
+  "user_id": 1,
+  "left_weight": 17.34,
+  "right_weight": 17.67,
+  "left_mpu": 1.2345,
+  "right_mpu": 1.5678,
+  "piezo1": 3050,
+  "piezo2": 2800,
+  "piezo3": 1500,
+  "piezo4": 1200,
+  "piezo5": 900
 }
 
 ###
 
 ### Get Risk Assessment for Patient (Authenticated)
-GET http://your-api-domain.com/sensor-data/1/risk
+GET https://thegt.my.id/api/sensor-data/1/risk
 Authorization: Bearer 1|IAeAA9cExFLvtttQcvRpUy0hLBEod7By57yEOQwR309ce4d9
 
 ###

@@ -1,27 +1,73 @@
-import React, { useState } from "react";
-import { StatusBar, Text, View, TouchableOpacity, TextInput, ScrollView, Modal, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
+import { StatusBar, Text, View, TouchableOpacity, TextInput, ScrollView, Modal, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { getProfile, updateProfile, logout, isLoggedIn } from '@/services/apiAuth'; // Adjust path to your auth service
 
 const Profile = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [loading, setLoading] = useState(true); // Loading state for fetch/update
   const [userData, setUserData] = useState({
-    name: "Jane Doe",
-    age: 45,
-    height: "157",
-    weight: "53",
-    gender: "Perempuan",
-    birthDate: "15/03/1979",
-    password: "••••••••",
+    name: "",
+    age: 0,
+    height: "",
+    weight: "",
+    gender: "",
+    birthDate: "", // Not in API; can be computed or stored separately
+    password: "••••••••", // Placeholder; not from API
   });
 
   const [editData, setEditData] = useState({
-    height: userData.height,
-    weight: userData.weight,
-    gender: userData.gender,
-    birthDate: userData.birthDate,
+    height: "",
+    weight: "",
+    gender: "",
+    birthDate: "",
     password: "",
   });
+
+  // Fetch profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const loggedIn = await isLoggedIn();
+        if (!loggedIn) {
+          Alert.alert("Error", "Anda harus login terlebih dahulu");
+          return; // Or navigate to login
+        }
+
+        const user = await getProfile();
+        // Map API data to local state (assume API gender is 'male'/'female')
+        const displayGender = user.gender === 'male' ? 'Laki-laki' : 'Perempuan';
+        setUserData({
+          name: user.name,
+          age: user.age || 0,
+          height: user.height?.toString() || "",
+          weight: user.weight?.toString() || "",
+          gender: displayGender,
+          birthDate: "", // TODO: If API returns birthDate, set it here; otherwise, compute from age if needed
+          password: "••••••••",
+        });
+
+        // Initialize editData from fetched data
+        setEditData({
+          height: user.height?.toString() || "",
+          weight: user.weight?.toString() || "",
+          gender: displayGender,
+          birthDate: "", // Set initial birthDate if available
+          password: "",
+        });
+      } catch (error: any) {
+        console.error('Profile fetch error:', error);
+        Alert.alert("Error", error.message || "Gagal memuat profil");
+        // If unauthorized, already handled in service (auto-logout)
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleEditProfile = () => {
     setEditData({
@@ -34,30 +80,84 @@ const Profile = () => {
     setIsEditModalVisible(true);
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (!editData.height || !editData.weight || !editData.gender || !editData.birthDate) {
       Alert.alert("Error", "Semua field harus diisi");
       return;
     }
 
-    setUserData({
-      ...userData,
-      height: editData.height,
-      weight: editData.weight,
-      gender: editData.gender,
-      birthDate: editData.birthDate,
-      age: new Date().getFullYear() - parseInt(editData.birthDate.split("/")[2]),
-    });
-    setIsEditModalVisible(false);
-    Alert.alert("Berhasil", "Profil berhasil diperbarui");
+    try {
+      setLoading(true);
+
+      // Calculate age from birthDate (DD/MM/YYYY)
+      const birthYear = parseInt(editData.birthDate.split("/")[2]);
+      const calculatedAge = new Date().getFullYear() - birthYear;
+
+      // Map gender to API format
+      const apiGender = editData.gender === "Laki-laki" ? "male" : "female";
+
+      // Prepare data for API (password not sent; extend if needed)
+      const updateData = {
+        height: parseFloat(editData.height),
+        weight: parseFloat(editData.weight),
+        gender: apiGender,
+        age: calculatedAge,
+        // password: editData.password ? editData.password : undefined, // If API supports
+      };
+
+      const updatedUser  = await updateProfile(updateData);
+
+      // Update local state with API response
+      const displayGender = updatedUser .gender === 'male' ? 'Laki-laki' : 'Perempuan';
+      setUserData({
+        ...userData,
+        name: updatedUser .name || userData.name,
+        age: updatedUser .age || calculatedAge,
+        height: updatedUser .height?.toString() || editData.height,
+        weight: updatedUser .weight?.toString() || editData.weight,
+        gender: displayGender,
+        birthDate: editData.birthDate,
+      });
+
+      setIsEditModalVisible(false);
+      Alert.alert("Berhasil", "Profil berhasil diperbarui");
+    } catch (error: any) {
+      console.error('Profile update error:', error);
+      Alert.alert("Error", error.message || "Gagal memperbarui profil");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSignOut = () => {
     Alert.alert("Sign Out", "Apakah Anda yakin ingin keluar?", [
       { text: "Batal", style: "cancel" },
-      { text: "Keluar", style: "destructive", onPress: () => console.log("Sign out") },
+      {
+        text: "Keluar",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await logout();
+            Alert.alert("Berhasil", "Anda telah keluar");
+            // TODO: Navigate to login screen, e.g., navigation.navigate('Login');
+            console.log("User  logged out");
+          } catch (error: any) {
+            console.error('Logout error:', error);
+            Alert.alert("Error", "Gagal logout");
+          }
+        },
+      },
     ]);
   };
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text className="mt-2 text-gray-600">Memuat profil...</Text>
+      </View>
+    );
+  }
 
   return (
     <View className="bg-white h-full w-full">
@@ -70,7 +170,7 @@ const Profile = () => {
 
         <ScrollView className="flex-1 px-6">
           {/* Profile Summary */}
-          <View className=" mb-8">
+          <View className="mb-8">
             {/* Avatar */}
             <View className="w-24 h-24 bg-orange-100 rounded-full mr-4 items-center justify-center mb-2">
               <Text className="text-3xl">👤</Text>
@@ -81,13 +181,13 @@ const Profile = () => {
             <Text className="text-gray-600 text-sm mb-4">{userData.age} Tahun</Text>
 
             {/* Edit Profile Button */}
-            <TouchableOpacity onPress={handleEditProfile} className="bg-gray-200 p-4 rounded-lg">
+            <TouchableOpacity onPress={handleEditProfile} className="bg-gray-200 p-4 rounded-lg" disabled={loading}>
               <Text className="text-black text-md font-medium text-center">Edit Profil</Text>
             </TouchableOpacity>
           </View>
 
           {/* Information List */}
-          <View className="space-y-4  p-3 rounded-lg ">
+          <View className="space-y-4 p-3 rounded-lg">
             {/* Tinggi Badan */}
             <View className="flex-row items-center py-3">
               <View className="flex-1">
@@ -126,14 +226,14 @@ const Profile = () => {
               <View className="flex-1">
                 <Text className="text-gray-900 font-medium">Tanggal Lahir</Text>
               </View>
-              <Text className="text-gray-600">{userData.birthDate}</Text>
+              <Text className="text-gray-600">{userData.birthDate || 'Tidak tersedia'}</Text>
             </View>
           </View>
         </ScrollView>
 
         {/* Sign Out Button */}
         <View className="px-6 pb-6">
-          <TouchableOpacity onPress={handleSignOut} className="bg-red-500 py-4 rounded-lg items-center">
+          <TouchableOpacity onPress={handleSignOut} className="bg-red-500 py-4 rounded-lg items-center" disabled={loading}>
             <Text className="text-white font-bold text-lg">Sign Out</Text>
           </TouchableOpacity>
         </View>
@@ -164,6 +264,7 @@ const Profile = () => {
                           keyboardType="numeric"
                           className="bg-gray-50 border-0 rounded-xl px-4 py-4 text-gray-900 text-base"
                           style={{ fontSize: 16 }}
+                          editable={!loading}
                         />
                         <View className="absolute right-4 top-4">
                           <Text className="text-gray-500 font-medium">cm</Text>
@@ -182,6 +283,7 @@ const Profile = () => {
                           keyboardType="numeric"
                           className="bg-gray-50 border-0 rounded-xl px-4 py-4 text-gray-900 text-base"
                           style={{ fontSize: 16 }}
+                          editable={!loading}
                         />
                         <View className="absolute right-4 top-4">
                           <Text className="text-gray-500 font-medium">kg</Text>
@@ -196,12 +298,14 @@ const Profile = () => {
                         <TouchableOpacity
                           onPress={() => setEditData({ ...editData, gender: "Laki-laki" })}
                           className={`flex-1 py-4 rounded-xl border-2 ${editData.gender === "Laki-laki" ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-gray-50"}`}
+                          disabled={loading}
                         >
                           <Text className={`text-center font-medium ${editData.gender === "Laki-laki" ? "text-blue-600" : "text-gray-600"}`}>Laki-laki</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={() => setEditData({ ...editData, gender: "Perempuan" })}
                           className={`flex-1 py-4 rounded-xl border-2 ${editData.gender === "Perempuan" ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-gray-50"}`}
+                          disabled={loading}
                         >
                           <Text className={`text-center font-medium ${editData.gender === "Perempuan" ? "text-blue-600" : "text-gray-600"}`}>Perempuan</Text>
                         </TouchableOpacity>
@@ -217,6 +321,7 @@ const Profile = () => {
                         placeholder="DD/MM/YYYY"
                         className="bg-gray-50 border-0 rounded-xl px-4 py-4 text-gray-900 text-base"
                         style={{ fontSize: 16 }}
+                        editable={!loading}
                       />
                     </View>
 
@@ -230,8 +335,10 @@ const Profile = () => {
                         secureTextEntry
                         className="bg-gray-50 border-0 rounded-xl px-4 py-4 text-gray-900 text-base"
                         style={{ fontSize: 16 }}
+                        editable={!loading}
                       />
                       <Text className="text-gray-500 text-sm mt-2">Kosongkan jika tidak ingin mengubah password</Text>
+                      {editData.password && <Text className="text-yellow-600 text-sm mt-1">Password akan diupdate secara lokal (API belum mendukung).</Text>}
                     </View>
                   </View>
                 </View>
@@ -241,11 +348,13 @@ const Profile = () => {
             {/* Bottom Buttons */}
             <View className="bg-white border-t border-gray-200 px-6 py-4">
               <View className="flex-row space-x-3">
-                <TouchableOpacity onPress={() => setIsEditModalVisible(false)} className="flex-1 py-4 rounded-xl bg-gray-100">
+                <TouchableOpacity onPress={() => setIsEditModalVisible(false)} className="flex-1 py-4 rounded-xl bg-gray-100" disabled={loading}>
                   <Text className="text-gray-700 font-semibold text-center text-lg">Batal</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={handleSaveProfile} className="flex-1 py-4 rounded-xl bg-blue-500">
-                  <Text className="text-white font-semibold text-center text-lg">Simpan</Text>
+                <TouchableOpacity onPress={handleSaveProfile} className="flex-1 py-4 rounded-xl bg-blue-500" disabled={loading}>
+                  <Text className="text-white font-semibold text-center text-lg">
+                    {loading ? <ActivityIndicator size="small" color="#fff" /> : "Simpan"}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>

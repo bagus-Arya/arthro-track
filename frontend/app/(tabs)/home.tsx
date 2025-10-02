@@ -1,8 +1,47 @@
+import React, { useState, useEffect } from "react";
 import { Image, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { getSensorData, SensorData } from "@/services/apiLogSensor";
 
 const Home = () => {
+  const [sensorData, setSensorData] = useState<SensorData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSensorData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getSensorData();
+        setSensorData(data);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Unknown error";
+        setError(errorMessage);
+        console.error("Failed to fetch sensor data:", errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSensorData();
+  }, []);
+
+  // Get the latest sensor data (first item in array, assuming sorted by recency)
+  const latest = sensorData.length > 0 ? sensorData[0] : null;
+
+  // Fallback values if no data
+  const score = latest?.oa_score || "90";
+  const riskCategory = latest?.oa_risk_category || "Sedang";
+
+  // Helper function to get dynamic color based on risk category
+  const getRiskColor = (category: string) => {
+    if (category.includes("Tinggi")) return "bg-red-500";
+    if (category.includes("Sedang")) return "bg-yellow-500";
+    return "bg-green-500"; // For "Rendah" or fallback
+  };
+
   return (
     <View className="bg-white h-full w-full justify-center items-center relative">
       <StatusBar barStyle="dark-content" />
@@ -22,15 +61,32 @@ const Home = () => {
             <View className="flex flex-col justify-between items-center w-full ">
               <View className="flex flex-row">
                 <View className="flex flex-1 flex-col justify-center items-center border-b border-gray-400 p-3">
-                  <Text className="text-sm text-black mb-1 font-mulish_bold">Skor Terakhir</Text>
-                  <Text className="text-xl text-black font-mulish_bold">90</Text>
+                  <Text className="text-sm text-black mb-1 font-mulish_bold">
+                    {loading ? "Loading..." : "Skor Terakhir"}
+                  </Text>
+                  {loading ? (
+                    <Text className="text-xl text-black font-mulish_bold">Loading...</Text>
+                  ) : error ? (
+                    <Text className="text-xl text-red-500 font-mulish_bold">Error</Text>
+                  ) : (
+                    <Text className="text-xl text-black font-mulish_bold">{score}</Text>
+                  )}
                 </View>
                 <View className="w-[1px] h-full bg-gray-400"></View>
                 <View className="flex flex-1 flex-col justify-center items-center border-b border-gray-400 p-3">
-                  <Text className="text-sm text-black mb-1 font-mulish_bold">Resiko terakhir</Text>
+                  <Text className="text-sm text-black mb-1 font-mulish_bold">
+                    {loading ? "Loading..." : "Resiko terakhir"}
+                  </Text>
                   <View className="flex flex-row items-center justify-center">
-                    <View className="w-5 h-5 bg-yellow-500 rounded-full mr-2"></View>
-                    <Text className="text-md text-black font-mulish_bold">Sedang</Text>
+                    {/* Dynamic color based on risk category */}
+                    <View className={`w-5 h-5 ${getRiskColor(riskCategory || '')} rounded-full mr-2`}></View>
+                    {loading ? (
+                      <Text className="text-md text-black font-mulish_bold">Loading...</Text>
+                    ) : error ? (
+                      <Text className="text-md text-red-500 font-mulish_bold">Error</Text>
+                    ) : (
+                      <Text className="text-md text-black font-mulish_bold">{riskCategory}</Text>
+                    )}
                   </View>
                 </View>
               </View>

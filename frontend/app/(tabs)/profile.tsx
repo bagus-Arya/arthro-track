@@ -3,6 +3,7 @@ import { StatusBar, Text, View, TouchableOpacity, TextInput, ScrollView, Modal, 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { getProfile, updateProfile, logout, isLoggedIn } from '@/services/apiAuth'; // Adjust path to your auth service
+import { router } from "expo-router"; // Add this line for navigation after logout
 
 const Profile = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -137,13 +138,14 @@ const Profile = () => {
         style: "destructive",
         onPress: async () => {
           try {
-            await logout();
-            Alert.alert("Berhasil", "Anda telah keluar");
-            // TODO: Navigate to login screen, e.g., navigation.navigate('Login');
-            console.log("User  logged out");
+            await logout(); // Call your auth service to clear session/token
+            // Navigate to login after successful logout
+            router.replace("/login");
+            Alert.alert("Berhasil", "Anda telah keluar"); // Optional: Show after navigation (or remove if you prefer immediate redirect)
+            console.log("User logged out");
           } catch (error: any) {
             console.error('Logout error:', error);
-            Alert.alert("Error", "Gagal logout");
+            Alert.alert("Error", "Gagal logout. Silakan coba lagi.");
           }
         },
       },

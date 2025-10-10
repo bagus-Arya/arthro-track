@@ -22,7 +22,7 @@ const Login = () => {
     try {
       const credentials = { email: email.trim(), password: password.trim() };
       await authLogin(credentials); 
-      router.replace("/(tabs)/home");
+      router.replace("/(tabs)/profile");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login gagal';
       setError(errorMessage);

@@ -1,10 +1,9 @@
-import { View, StatusBar, ScrollView, Text, TouchableOpacity, Image, Dimensions, Modal } from "react-native";
+import { View, StatusBar, ScrollView, Text, TouchableOpacity, Image, Dimensions } from "react-native";
 import React, { useCallback, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as NavigationBar from "expo-navigation-bar";
 import { useFocusEffect } from "@react-navigation/native";
-import { WebView } from "react-native-webview";  
 import { cardData, CardData } from "@/constants/InfoDatas";
 import { router } from "expo-router";
 
@@ -12,10 +11,6 @@ const { width } = Dimensions.get("window");
 
 const Info = () => {
   const [selectedCard, setSelectedCard] = useState<CardData>(cardData[0]);
-  const [selectedVideo, setSelectedVideo] = useState<CardData | null>(null);  
-  const [isVideoModalVisible, setIsVideoModalVisible] = useState(false);  
-  const textCards = cardData.filter((card) => !card.driveId);  
-  const videoCards = cardData.filter((card) => card.driveId);  
 
   useFocusEffect(
     useCallback(() => {
@@ -25,16 +20,6 @@ const Info = () => {
       applyNavBar();
     }, [])
   );
-
-  const onWebViewError = (syntheticEvent: any) => {
-    const { nativeEvent } = syntheticEvent;
-    console.error("WebView error in Info video:", nativeEvent);
-  };
-
-  const handleVideoPress = (video: CardData) => {
-    setSelectedVideo(video);
-    setIsVideoModalVisible(true);
-  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -50,7 +35,7 @@ const Info = () => {
       <ScrollView className="flex-1 px-6 pt-2 bg-white">
         <View className="">
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="p-4">
-            {textCards.map((card: CardData) => (
+            {cardData.map((card: CardData) => (
               <TouchableOpacity
                 key={card.id}
                 className="mr-3 bg-gray-100 rounded-lg shadow-sm"
@@ -77,10 +62,20 @@ const Info = () => {
             ))}
           </ScrollView>
         </View>
-
+        
         <View className="mt-4 mb-6">  
           <Text className="text-lg font-bold text-black mb-3">{selectedCard.title}</Text>
-          <Text className="text-sm text-gray-700 leading-5">{selectedCard.content}</Text>
+          <View className="space-y-1"> {/* Container for line spacing */}
+            {selectedCard.content.split('\n').map((line, index) => (
+              <Text 
+                key={index} 
+                className="text-sm text-gray-700 leading-6" 
+                style={{ marginBottom: 4 }} // Extra spacing between lines
+              >
+                {line.trim()} {/* Trim whitespace for clean bullets */}
+              </Text>
+            ))}
+          </View>
         </View>
 
         <View className="mb-6">
@@ -126,85 +121,7 @@ const Info = () => {
             sehingga sangat penting untuk segera mengenali tanda-tanda dan memperoleh perawatan yang tepat.
           </Text>
         </View>
-
-        {videoCards.length > 0 && (
-          <View className="mb-6">
-            <Text className="text-lg font-bold text-black mb-4">Video Latihan OA</Text>
-
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="p-2">
-              {videoCards.map((video: CardData) => (
-                <TouchableOpacity
-                  key={video.id}
-                  className="mr-3 bg-gray-100 rounded-lg shadow-sm overflow-hidden"
-                  style={{
-                    width: 150,  
-                    height: 120,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 2,
-                    elevation: 2,
-                  }}
-                  onPress={() => handleVideoPress(video)}
-                >
-                  <Image source={{ uri: video.image }} className="w-full h-full" resizeMode="cover" />
-                  
-                  <View className="absolute inset-0 justify-center items-center bg-black bg-opacity-30">
-                    <View className="bg-black bg-opacity-70 rounded-full p-2">
-                      <Ionicons name="play" size={24} color="white" />
-                    </View>
-                  </View>
-
-                  <View className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2">
-                    <Text className="text-xs text-white font-semibold" numberOfLines={1}>
-                      {video.title}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
       </ScrollView>
-
-      <Modal
-        visible={isVideoModalVisible}
-        animationType="slide"
-        supportedOrientations={["portrait", "landscape"]}
-        onRequestClose={() => setIsVideoModalVisible(false)}
-      >
-        <View className="flex-1 bg-black">
-          <SafeAreaView className="flex-1">
-            <View className="flex-row items-center justify-between px-4 py-3 bg-black">
-              <TouchableOpacity onPress={() => setIsVideoModalVisible(false)} className="p-2">
-                <Ionicons name="close" size={24} color="white" />
-              </TouchableOpacity>
-              <Text className="text-lg font-bold text-white flex-1 text-center px-4">
-                {selectedVideo?.title}
-              </Text>
-              <View className="w-10" />
-            </View>
-
-            {selectedVideo && (
-              <View className="flex-1">
-                <WebView
-                  source={{
-                    uri: `https://drive.google.com/file/d/${selectedVideo.driveId}/preview`,
-                  }}
-                  style={{ flex: 1 }}
-                  allowsFullscreenVideo={true}
-                  mediaPlaybackRequiresUser Action={false}
-                  javaScriptEnabled={true}
-                  domStorageEnabled={true}
-                  startInLoadingState={true}
-                  scalesPageToFit={true}
-                  onError={onWebViewError}
-                />
-              </View>
-            )}
-          </SafeAreaView>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };
